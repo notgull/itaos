@@ -10,9 +10,11 @@ pub(crate) mod data;
 pub(crate) mod eclass;
 mod thread;
 
+pub(crate) use thread::DirectiveThreadMessage;
+
 /// Runs the thread that manages the Appkit thread.
 pub struct GuiThread {
-    sender: Sender<ServerTask>,
+    sender: Sender<Option<ServerTask>>,
     manager_id: usize,
 }
 
@@ -28,7 +30,7 @@ impl GuiThread {
             data: DirectiveData::RegisterManager,
         });
         sender
-            .try_send(srvtask)
+            .try_send(Some(srvtask))
             .expect("Thread shouldn't die while we're initializing it");
         let manager_id = manid_task.wait();
         Self { sender, manager_id }
@@ -45,9 +47,17 @@ impl GuiThread {
             data: DirectiveData::RegisterManager,
         });
         sender
-            .try_send(srvtask)
+            .try_send(Some(srvtask))
             .expect("Thread shouldn't die while we're initializing it");
         let manager_id = manid_task.await;
         Self { sender, manager_id }
+    }
+
+    #[inline]
+    pub(crate) fn from_raw(sender: Sender<Option<ServerTask>>, id: usize) -> Self {
+        Self {
+            sender,
+            manager_id: id,
+        }
     }
 }

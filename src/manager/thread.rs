@@ -8,7 +8,7 @@ use crate::{
     util::{Id, ThreadSafe},
 };
 use cocoa::{appkit, foundation};
-use flume::{Receiver, Sender};
+use flume::{Receiver, Sender, TryRecvError};
 use objc::{
     class,
     declare::ClassDecl,
@@ -18,16 +18,24 @@ use objc::{
     sel,
 };
 use once_cell::sync::Lazy;
-use std::{cell::RefCell, ffi::c_void, ptr, rc::Rc, thread};
+use std::{
+    cell::{Cell, RefCell},
+    ffi::c_void,
+    ptr,
+    rc::Rc,
+    sync::Arc,
+    thread,
+};
 use tinyvec::{ArrayVec, TinyVec};
 
 #[inline]
-pub(crate) fn get_gt_sender() -> Sender<ServerTask> {
+pub(crate) fn get_gt_sender() -> Sender<Option<ServerTask>> {
     GUI_THREAD.clone()
 }
 
-static GUI_THREAD: Lazy<Sender<ServerTask>> = Lazy::new(|| {
+static GUI_THREAD: Lazy<Sender<Option<ServerTask>>> = Lazy::new(|| {
     let (send, recv) = flume::unbounded();
+    let manager_copy = send.clone();
 
     thread::Builder::new()
         .name("itaos-runtime-thread".to_string())
@@ -51,6 +59,12 @@ static GUI_THREAD: Lazy<Sender<ServerTask>> = Lazy::new(|| {
                     StrongPtr::new(pool)
                 };
 
+                // create the channel that we tell the directive thread to stop or start on
+                let (dt_send, dt_recv) = flume::unbounded::<DirectiveThreadMessage>();
+
+                let dt_scopy = send.clone();
+                let dt_rcopy = recv.clone();
+
                 // initialize the shared application
                 let NSApplication = class!(NSApplication);
                 let shared_app: Id = unsafe { msg_send![NSApplication, sharedApplication] };
@@ -64,10 +78,32 @@ static GUI_THREAD: Lazy<Sender<ServerTask>> = Lazy::new(|| {
                 // start another thread dedicated to receiving directives from the receiver
                 thread::Builder::new()
                     .name("itaos-directive-thread".to_string())
-                    .spawn(move || loop {
-                        match recv.recv() {
+                    .spawn(move || 'dtloop: loop {
+                        // first, see if there are messages to process
+                        match dt_recv.try_recv() {
+                            Err(TryRecvError::Empty) => (),
+                            Err(TryRecvError::Disconnected) => break 'dtloop,
+                            Ok(DirectiveThreadMessage::Start) => (),
+                            Ok(DirectiveThreadMessage::RunEvent(..)) => unreachable!(),
+                            Ok(DirectiveThreadMessage::Stop) => loop {
+                                match dt_recv.recv() {
+                                    Err(_) => break 'dtloop,
+                                    Ok(DirectiveThreadMessage::Start) => break,
+                                    Ok(DirectiveThreadMessage::Stop) => (),
+                                    Ok(DirectiveThreadMessage::RunEvent(ref gt, ev, func)) => {
+                                        (func)(gt, ev);
+                                        dt_scopy.send(None).unwrap();
+                                    }
+                                }
+                            },
+                        }
+
+                        match dt_rcopy.recv() {
                             Err(_) => break,
-                            Ok(srvtask) => {
+                            Ok(None) => {
+                                // this is forcing us to process a message
+                            }
+                            Ok(Some(srvtask)) => {
                                 // push it onto the heap, then put the pointer in an event
                                 let srvtask = Box::into_raw(Box::new(srvtask)) as *mut _;
                                 let event = unsafe {
@@ -122,9 +158,14 @@ static GUI_THREAD: Lazy<Sender<ServerTask>> = Lazy::new(|| {
                                 //       piecemeal
                                 let data = Rc::new(ManagerData {
                                     runtime_id: id,
-                                    event_handler: RefCell::new(Box::new(|_, ev| {
+                                    event_handler: RefCell::new(Arc::new(|_, ev| {
                                         log::warn!("Skipped event: {:?}", ev);
                                     })),
+                                    window_count: Cell::new(0),
+                                    waiting: Cell::new(false),
+                                    directive_sender: send.clone(),
+                                    directive_receiver: recv.clone(),
+                                    message_sender: dt_send.clone(),
                                 });
 
                                 manager_data.push(Some(data));
@@ -173,5 +214,11 @@ static GUI_THREAD: Lazy<Sender<ServerTask>> = Lazy::new(|| {
             f();
         }).expect("Unable to spawn runtime thread");
 
-    send
+    manager_copy
 });
+
+pub(crate) enum DirectiveThreadMessage {
+    Start,
+    Stop,
+    RunEvent(GuiThread, Event, Arc<dyn Fn(&GuiThread, Event) + Send + Sync>),
+}
