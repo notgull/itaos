@@ -1,5 +1,6 @@
 // MIT/Apache2 License
 
-pub enum Directive {
+#[derive(Debug)]
+pub enum Event {
     Quit,
 }
