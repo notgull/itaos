@@ -1,32 +1,25 @@
 // MIT/Apache2 License
 
-use super::DirectiveData;
+use super::Directive;
 use crate::{manager::data::ManagerData, util::Id, task::ServerTask};
 use objc::{runtime::{YES, Object}, rc::StrongPtr};
 use std::{ptr, rc::Rc};
 
-impl DirectiveData {
+const nil: *mut Object = ptr::null_mut();
+
+impl Directive {
     #[inline]
     pub(crate) fn process(self, task: ServerTask, data: &Rc<ManagerData>) {
-        std::thread_local! {
-            static SENDER_OBJECT: StrongPtr = {
-                let ns_object = class!(NSObject);
-                let sender_object: Id = unsafe { msg_send![ns_object, alloc] };
-                let sender_object: Id = unsafe { msg_send![ns_object, init] };
-                unsafe { StrongPtr::new(sender_object) }
-            };
-        }
-
         match self {
-            DirectiveData::Show(win) => {
+            Directive::Show(win) => {
                 let win = unsafe { win.as_ptr() }.as_ptr();
-                let _: () = unsafe { msg_send![win, makeKeyAndOrderFront:SENDER_OBJECT] };
+                let _: () = unsafe { msg_send![win, makeKeyAndOrderFront:nil] };
                 let _: () = unsafe { msg_send![data.shared_application, activateIgnoringOtherApps:YES] };
                 task.send::<()>(());
             }
-            DirectiveData::Hide(win) => {
+            Directive::Hide(win) => {
                 let win = unsafe { win.as_ptr() }.as_ptr();
-                let _: () = unsafe { msg_send![win, orderOut:SENDER_OBJECT] };
+                let _: () = unsafe { msg_send![win, orderOut:nil] };
                 task.send::<()>(());
             }
             _ => panic!("Illegal directive"),

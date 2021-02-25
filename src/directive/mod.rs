@@ -4,14 +4,8 @@ use crate::window::Window;
 
 mod process;
 
-pub(crate) struct Directive {
-    pub(crate) id: usize,
-    pub(crate) data: DirectiveData,
-}
-
-pub(crate) enum DirectiveData {
+pub(crate) enum Directive {
     Quit,
-    RegisterManager,
     CreateWindow,
     Hide(Window),
     Show(Window),

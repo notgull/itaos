@@ -17,7 +17,7 @@ pub(crate) fn process_event(mdata: &Rc<ManagerData>, event: Event) {
     mdata.directive_sender.send(None).unwrap();
 
     // tell the directive processing thread to run the event handler
-    let gt = GuiThread::from_raw(mdata.directive_sender.clone(), mdata.runtime_id);
+    let gt = GuiThread::from_raw(mdata.directive_sender.clone());
     mdata
         .message_sender
         .send(DirectiveThreadMessage::RunEvent(
@@ -33,7 +33,7 @@ pub(crate) fn process_event(mdata: &Rc<ManagerData>, event: Event) {
             Ok(None) | Err(_) => break, // Ok(None) tells us we're done with it
             Ok(Some(mut srvtask)) => {
                 let directive = srvtask.input().unwrap();
-                directive.data.process(srvtask, mdata);
+                directive.process(srvtask, mdata);
             }
         }
     }

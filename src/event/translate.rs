@@ -6,8 +6,8 @@ use cocoa::foundation;
 
 /// Translate any given NSEvent into the appropriate iTaos event, and also return the runtime ID.
 #[inline]
-pub(crate) fn translate_nsevent(event: Id) -> (Option<Event>, usize) {
+pub(crate) fn translate_nsevent(event: Id) -> Option<Event> {
     let ty: foundation::NSUInteger = unsafe { msg_send![event, type] };
 
-    (None, 0)
+    None
 }

@@ -2,7 +2,7 @@
 
 use super::{data::ManagerData, GuiThread};
 use crate::{
-    directive::{Directive, DirectiveData},
+    directive::Directive,
     event::Event,
     task::ServerTask,
     util::{memslot, Id, ThreadSafe},
@@ -42,15 +42,6 @@ static GUI_THREAD: Lazy<Sender<Option<ServerTask>>> = Lazy::new(|| {
         .spawn(move || {
             // put a massive ObjC exception catcher over this thread, just in case we miss something
             let f = move || {
-                // we increment this number for every "runtime" that's created, and we only quit once
-                // it's reached zero
-                let mut runtime_count = 0usize;
-
-                // data associated with every individual manager
-                // note: we can expect this to contain one element during standard operation.
-                let mut manager_data: TinyVec<[Option<Rc<ManagerData>>; 1]>
-                    = TinyVec::from(ArrayVec::from_array_len([None], 0));
-
                 // set up cocoa's refcount mechanism
                 let NSAutoreleasePool = class!(NSAutoreleasePool);
                 let pool = unsafe {
@@ -71,6 +62,17 @@ static GUI_THREAD: Lazy<Sender<Option<ServerTask>>> = Lazy::new(|| {
 
                 // safety: we use shared_app in a thread-safe way
                 let shared_app = unsafe { ThreadSafe::new(shared_app) };
+
+                // window data we pass around between each window
+                let manager_data = Rc::new(ManagerData {
+                    event_handler: RefCell::new(Arc::new(|_, ev| log::warn!("Event ignored: {:?}", ev))),
+                    window_count: Cell::new(0),
+                    waiting: Cell::new(false),
+                    directive_sender: send.clone(),
+                    directive_receiver: recv.clone(),
+                    message_sender: dt_send.clone(),
+                    shared_application: shared_app.into_inner(),
+                });
 
                 // create the class we use to store tasks
                 let itaos_event = super::eclass::create_itaosevent_class();
@@ -145,74 +147,11 @@ static GUI_THREAD: Lazy<Sender<Option<ServerTask>>> = Lazy::new(|| {
                         let srvtask: *mut c_void = unsafe { msg_send![event, directive] };
                         let mut srvtask: Box<ServerTask> = unsafe { Box::from_raw(srvtask.cast()) };
                         let directive = srvtask.input().unwrap();
-
-                        let did = directive.id;
-                        let directive = match directive.data {
-                            DirectiveData::RegisterManager => {
-                                // the process() method needs a ManagerData, which we register here
-                                let id = runtime_count;
-                                runtime_count += 1;
-
-                                // construct the manager's data on the heap
-                                // note: since ManagerData uses an unsized field, we have to construct it
-                                //       piecemeal
-                                let data = Rc::new(ManagerData {
-                                    runtime_id: id,
-                                    event_handler: RefCell::new(Arc::new(|_, ev| {
-                                        log::warn!("Skipped event: {:?}", ev);
-                                    })),
-                                    window_count: Cell::new(0),
-                                    waiting: Cell::new(false),
-                                    directive_sender: send.clone(),
-                                    directive_receiver: recv.clone(),
-                                    message_sender: dt_send.clone(),
-                                    shared_application: shared_app.into_inner(),
-                                });
-
-                                manager_data.push(Some(data));
-                                srvtask.send::<usize>(id);
-
-                                // skip the process() step
-                                continue;
-                            }
-                            directive => directive,
-                        };
-                        let manager: &Rc<ManagerData> = match manager_data {
-                            // fast path: if the tinyvec is still inline, there are only 0 (invalid) or 1 
-                            // elements, so just pull that
-                            TinyVec::Inline(ref manager_data) => match manager_data.get(0) {
-                                Some(Some(mandata)) => mandata,
-                                _ => panic!("Called directive without initializing manager"),
-                            }
-                            // slow path: manually search each entry for the id
-                            TinyVec::Heap(ref manager_data) =>
-                                manager_data
-                                    .iter()
-                                    .find_map(|e| match e {
-                                        Some(e) if e.runtime_id == did => {
-                                            Some(e)
-                                        },
-                                        _ => {
-                                            None
-                                        }
-                                    })
-                                    .expect("No matching manager ID found"),
-                        };
-
-                        directive.process(*srvtask, manager);
+                        directive.process(*srvtask, &manager_data);
                     } else {
                         // this event may or may not be relevant to our user
-                        if let (Some(ev), rid) = crate::event::translate_nsevent(event) {
-                            let manager = manager_data.iter().find_map(|e| match e {
-                                        Some(e) if e.runtime_id == rid => {
-                                            Some(e)
-                                        },
-                                        _ => {
-                                            None
-                                        }
-                                    })
-                                    .expect("No matching manager ID found");
-                            crate::event::process_event(manager, ev);
+                        if let Some(ev) = crate::event::translate_nsevent(event) {
+                            crate::event::process_event(&manager_data, ev);
                         }
                         // send the event on
                         let _: () = unsafe { msg_send![*shared_app, sendEvent: event] };

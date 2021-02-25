@@ -72,7 +72,9 @@ pub(crate) fn initialize_window_class() -> &'static Class {
     }
 
     // intercepts events and turns them into our type of events
-    extern "C"
+    extern "C" fn send_event(obj: &Object, _sel: Sel, event: Id) {
+
+    }
 
     itaos_window.register()
 }

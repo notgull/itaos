@@ -14,7 +14,6 @@ use std::{
 
 /// Thread-side data associated with the runtime manager.
 pub(crate) struct ManagerData {
-    pub(crate) runtime_id: usize,
     pub(crate) event_handler: RefCell<Arc<dyn Fn(&GuiThread, Event) + Send + Sync>>,
     pub(crate) window_count: Cell<usize>,
     pub(crate) waiting: Cell<bool>,
