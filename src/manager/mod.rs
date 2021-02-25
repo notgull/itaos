@@ -60,4 +60,9 @@ impl GuiThread {
             manager_id: id,
         }
     }
+
+    #[inline]
+    pub(crate) fn into_inner(self) -> Sender<Option<ServerTask>> {
+        self.sender
+    }
 }

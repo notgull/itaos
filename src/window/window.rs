@@ -1,7 +1,11 @@
 // MIT/Apache2 License
 
-use super::event::process_event;
-use crate::{event::Event, manager::data::ManagerData, util::Id, window::Window};
+use crate::{
+    event::{process_event, Event},
+    manager::data::ManagerData,
+    util::Id,
+    window::Window,
+};
 use objc::{
     declare::ClassDecl,
     runtime::{Class, Object, Sel, BOOL, NO},

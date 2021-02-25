@@ -5,7 +5,7 @@ use crate::{
     directive::{Directive, DirectiveData},
     event::Event,
     task::ServerTask,
-    util::{Id, ThreadSafe},
+    util::{memslot, Id, ThreadSafe},
 };
 use cocoa::{appkit, foundation};
 use flume::{Receiver, Sender, TryRecvError};
@@ -34,7 +34,7 @@ pub(crate) fn get_gt_sender() -> Sender<Option<ServerTask>> {
 }
 
 static GUI_THREAD: Lazy<Sender<Option<ServerTask>>> = Lazy::new(|| {
-    let (send, recv) = flume::unbounded();
+    let (mut send, recv) = flume::unbounded();
     let manager_copy = send.clone();
 
     thread::Builder::new()
@@ -200,6 +200,19 @@ static GUI_THREAD: Lazy<Sender<Option<ServerTask>>> = Lazy::new(|| {
 
                         directive.process(*srvtask, manager);
                     } else {
+                        // this event may or may not be relevant to our user
+                        if let (Some(ev), rid) = crate::event::translate_nsevent(event) {
+                            let manager = manager_data.iter().find_map(|e| match e {
+                                        Some(e) if e.runtime_id == rid => {
+                                            Some(e)
+                                        },
+                                        _ => {
+                                            None
+                                        }
+                                    })
+                                    .expect("No matching manager ID found");
+                            crate::event::process_event(manager, ev);
+                        }
                         // send the event on
                         let _: () = unsafe { msg_send![*shared_app, sendEvent: event] };
                     }
@@ -220,5 +233,9 @@ static GUI_THREAD: Lazy<Sender<Option<ServerTask>>> = Lazy::new(|| {
 pub(crate) enum DirectiveThreadMessage {
     Start,
     Stop,
-    RunEvent(GuiThread, Event, Arc<dyn Fn(&GuiThread, Event) + Send + Sync>),
+    RunEvent(
+        GuiThread,
+        Event,
+        Arc<dyn Fn(&GuiThread, Event) + Send + Sync>,
+    ),
 }
