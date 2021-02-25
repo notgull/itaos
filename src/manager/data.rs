@@ -6,6 +6,7 @@ use crate::{
     task::ServerTask,
 };
 use flume::{Receiver, Sender};
+use objc::runtime::Object;
 use std::{
     cell::{Cell, RefCell},
     sync::Arc,
@@ -20,4 +21,5 @@ pub(crate) struct ManagerData {
     pub(crate) directive_sender: Sender<Option<ServerTask>>,
     pub(crate) directive_receiver: Receiver<Option<ServerTask>>,
     pub(crate) message_sender: Sender<DirectiveThreadMessage>,
+    pub(crate) shared_application: *mut Object,
 }

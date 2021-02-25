@@ -2,6 +2,10 @@
 
 pub(crate) mod window;
 
-use crate::Key;
+use crate::{manager::GuiThread, Key};
 
 pub type Window = Key;
+
+impl GuiThread {
+
+}

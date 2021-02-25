@@ -1,5 +1,6 @@
 // MIT/Apache2 License
 
+use objc::runtime::Object;
 use std::{fmt, num::NonZeroUsize, ptr::NonNull};
 
 /// A key that maps to a certain Win32 object.
@@ -35,9 +36,9 @@ impl Key {
     }
 
     #[inline]
-    pub(crate) unsafe fn as_ptr(self) -> NonNull<()> {
+    pub(crate) unsafe fn as_ptr(self) -> NonNull<Object> {
         // SAFETY: key is guaranteed to be non-zero
-        unsafe { NonNull::new_unchecked(self.key.get() as *mut ()) }
+        unsafe { NonNull::new_unchecked(self.key.get() as *mut Object) }
     }
 
     #[inline]

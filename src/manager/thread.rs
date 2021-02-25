@@ -166,6 +166,7 @@ static GUI_THREAD: Lazy<Sender<Option<ServerTask>>> = Lazy::new(|| {
                                     directive_sender: send.clone(),
                                     directive_receiver: recv.clone(),
                                     message_sender: dt_send.clone(),
+                                    shared_application: shared_app.into_inner(),
                                 });
 
                                 manager_data.push(Some(data));

@@ -8,7 +8,7 @@ use crate::{
 };
 use objc::{
     declare::ClassDecl,
-    runtime::{Class, Object, Sel, BOOL, NO},
+    runtime::{Class, Object, Sel, BOOL, NO, YES},
 };
 use std::{
     ffi::c_void,
@@ -61,7 +61,7 @@ pub(crate) fn initialize_window_class() -> &'static Class {
             process_event(&mdata, Event::Quit);
         }
 
-        NO
+        YES
     }
 
     unsafe {
@@ -70,6 +70,9 @@ pub(crate) fn initialize_window_class() -> &'static Class {
             window_should_close as extern "C" fn(&mut Object, Sel, Id) -> BOOL,
         );
     }
+
+    // intercepts events and turns them into our type of events
+    extern "C"
 
     itaos_window.register()
 }
