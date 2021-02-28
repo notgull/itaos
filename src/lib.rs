@@ -4,6 +4,7 @@
 extern crate objc;
 
 pub(crate) mod directive;
+pub(crate) mod lazy_class;
 pub(crate) mod util;
 
 pub mod event;

@@ -28,9 +28,7 @@ impl GuiThread {
 
     #[inline]
     pub(crate) fn from_raw(sender: Sender<Option<ServerTask>>) -> Self {
-        Self {
-            sender,
-        }
+        Self { sender }
     }
 
     #[inline]

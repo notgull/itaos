@@ -1,21 +1,36 @@
 // MIT/Apache2 License
 
+use super::get_vector_view_class;
 use crate::{
     event::{process_event, Event},
+    lazy_class::LazyClass,
     manager::data::ManagerData,
     util::Id,
     window::Window,
 };
+use cocoa::{
+    appkit::{NSBackingStoreType, NSWindowStyleMask},
+    foundation::NSRect,
+};
 use objc::{
     declare::ClassDecl,
+    rc::StrongPtr,
     runtime::{Class, Object, Sel, BOOL, NO, YES},
 };
+use once_cell::sync::Lazy;
 use std::{
     ffi::c_void,
     mem::{self, ManuallyDrop},
     ptr::NonNull,
     rc::Rc,
 };
+
+#[inline]
+pub(crate) fn get_window_class() -> &'static Class {
+    ITAOS_WINDOW_CLASS.get_or_init(initialize_window_class)
+}
+
+static ITAOS_WINDOW_CLASS: LazyClass = LazyClass::new();
 
 const MDATA: &str = "mdata";
 
@@ -36,13 +51,22 @@ fn get_wid(this: &Object) -> Window {
 
 // initialize the class for the window
 #[inline]
-pub(crate) fn initialize_window_class() -> &'static Class {
+fn initialize_window_class() -> &'static Class {
     // we inherit from the NSWindow class
     let superclass = class!(NSWindow);
     let mut itaos_window = ClassDecl::new("ItaosWindow", superclass).unwrap();
 
     // pointer to the manager data
     itaos_window.add_ivar::<*mut c_void>(MDATA);
+
+    // helper function to get the mdata
+    extern "C" fn mdata(this: &Object, _sel: Sel) -> *mut c_void {
+        Rc::as_ptr(&get_mdata(this)).cast()
+    }
+
+    unsafe {
+        itaos_window.add_method(sel!(mdata), mdata as extern "C" fn(&Object, Sel));
+    }
 
     // runs when the window should close
     extern "C" fn window_should_close(this: &mut Object, _sel: Sel, _sender: Id) -> BOOL {
@@ -73,7 +97,74 @@ pub(crate) fn initialize_window_class() -> &'static Class {
 
     // intercepts events and turns them into our type of events
     extern "C" fn send_event(obj: &Object, _sel: Sel, event: Id) {
+        unsafe {
+            msg_send![
+                super(this, this.class().superclass().unwrap()),
+                sendEvent: event
+            ]
+        };
+    }
 
+    unsafe {
+        itaos_window.add_method(
+            sel!(sendEvent:),
+            send_event as extern "C" fn(&Object, Sel, Id),
+        );
+    }
+
+    // initialize our window
+    extern "C" fn init_with_content_rect(
+        this: &Object,
+        _sel: Sel,
+        content_rect: NSRect,
+        style_mask: NSWindowStyleMask,
+        backing: NSBackingStoreType,
+        defer: BOOL,
+        screen: Id,
+    ) -> Id {
+        // first, initialize our superior's window
+        let this: Id = unsafe {
+            msg_send![super(this, this.class().superclass().unwrap()),
+                                          initWithContentRect: content_rect
+                                          styleMask: style_mask
+                                          backing: backing
+                                          defer: defer
+                                          screen: screen]
+        };
+        // then, set some basic properties
+        unsafe {
+            let _: () = msg_send![this, setAcceptsMouseMovedEvents: YES];
+            let _: () = msg_send![this, setDelegate: this];
+            let _: () = msg_send![this, setReleasedWhenClosed: YES];
+        }
+
+        // initialize our root view and set it as so
+        let root_view = unsafe {
+            let root_view: Id = msg_send![get_vector_view_class(), alloc];
+            let root_view: Id = msg_send![root_view, initWithFrame: content_rect];
+            root_view
+        };
+        unsafe { msg_send![this, setContentView: root_view] };
+        unsafe { msg_send![root_view, release] };
+
+        // we are done
+        this
+    }
+
+    unsafe {
+        itaos_window.add_method(
+            sel!(initWithContentRect: contentRect: styleMask: backing: defer: screen),
+            init_with_content_rect
+                as extern "C" fn(
+                    &Object,
+                    Sel,
+                    NSRect,
+                    NSWindowStyleMask,
+                    NSBackingStoreType,
+                    BOOL,
+                    Id,
+                ) -> BOOL,
+        );
     }
 
     itaos_window.register()

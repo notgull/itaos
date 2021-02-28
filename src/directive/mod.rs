@@ -1,12 +1,22 @@
 // MIT/Apache2 License
 
-use crate::window::Window;
+use crate::{window::Window, Key};
+use cocoa::appkit::{NSBackingStoreType, NSWindowStyleMask};
 
 mod process;
 
 pub(crate) enum Directive {
     Quit,
-    CreateWindow,
+    CreateWindow {
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        style: NSWindowStyleMask,
+        backing: NSBackingStoreType,
+        deref: bool,
+        screen: Key,
+    },
     Hide(Window),
     Show(Window),
     Move {
