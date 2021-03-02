@@ -1,11 +1,12 @@
 // MIT/Apache2 License
 
-use crate::{window::Window, Key};
+use crate::{task::ServerTask, window::Window, Key};
 use cocoa::appkit::{NSBackingStoreType, NSWindowStyleMask};
 
 mod process;
 
 pub(crate) enum Directive {
+    OffloadFunction(Box<dyn FnOnce(ServerTask) + Send + Sync>),
     Quit,
     CreateWindow {
         x: f64,

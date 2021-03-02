@@ -4,6 +4,7 @@ use super::{data::ManagerData, GuiThread};
 use crate::{
     directive::Directive,
     event::Event,
+    objc_try,
     task::ServerTask,
     util::{memslot, Id, ThreadSafe},
 };
@@ -126,11 +127,20 @@ static GUI_THREAD: Lazy<Sender<Option<ServerTask>>> = Lazy::new(|| {
                 let date: Id = unsafe { msg_send![date_class, distantFuture] };
                 loop {
                     // get an event from the event queue
-                    let event: Id = unsafe {
+                    let event: crate::Result<Id> = objc_try!(unsafe {
                         msg_send![*shared_app, nextEventMatchingMask: appkit::NSEventMask::NSAnyEventMask
                                                untilDate: date
                                                inMode: foundation::NSDefaultRunLoopMode
                                                dequeue: YES]
+                    });
+
+                    // interpret an exception here as a break
+                    let event = match event {
+                        Ok(event) => event,
+                        Err(e) => {
+                            log::error!("Breaking main loop on exception: {:?}", e);
+                            break;
+                        }
                     };
 
                     // interpret a null event as a break
@@ -154,17 +164,18 @@ static GUI_THREAD: Lazy<Sender<Option<ServerTask>>> = Lazy::new(|| {
                             crate::event::process_event(&manager_data, ev);
                         }
                         // send the event on
-                        let _: () = unsafe { msg_send![*shared_app, sendEvent: event] };
+                        if let Err(e) = objc_try!(
+                                            let _: () = unsafe { msg_send![*shared_app, sendEvent: event] }
+                                        ) {
+                            log::error!("Failed to send event to receiver: {:?}", e);
+                        }
                     }
                 }
 
                 // dropping pool should automatically drain the pool
             };
 
-            //if unsafe { obj_exception::r#try(f) }.is_err() {
-            //    panic!("Uncaught exception");
-            //}
-            f();
+            objc_try!(f()).expect("Uncaught exception during main loop");
         }).expect("Unable to spawn runtime thread");
 
     manager_copy

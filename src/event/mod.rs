@@ -1,6 +1,6 @@
 // MIT/Apache2 License
 
-use crate::window::Window;
+use crate::{graphics::Graphics, window::Window};
 
 mod process;
 mod translate;
@@ -12,4 +12,5 @@ pub(crate) use translate::translate_nsevent;
 pub enum Event {
     Quit,
     Close(Window),
+    Paint(Window, Graphics),
 }

@@ -14,6 +14,10 @@ impl Directive {
     #[inline]
     pub(crate) fn process(self, task: ServerTask, data: &Rc<ManagerData>) {
         match self {
+            Directive::Offload(func) => {
+                // we're just offloading some work onto our thread pool, run it
+                (func)();
+            }
             Directive::Show(win) => {
                 let win = unsafe { win.as_ptr() }.as_ptr();
                 let _: () = unsafe { msg_send![win, makeKeyAndOrderFront: nil] };

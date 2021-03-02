@@ -8,6 +8,7 @@ pub(crate) mod lazy_class;
 pub(crate) mod util;
 
 pub mod event;
+pub mod graphics;
 pub mod key;
 pub mod manager;
 pub mod task;
@@ -19,3 +20,6 @@ pub(crate) use util::Id;
 pub use event::Event;
 pub use key::Key;
 pub use task::Task;
+
+#[doc(no_inline)]
+pub use clever_graphics::{objc_try, Error, Result};
