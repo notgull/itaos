@@ -1,7 +1,10 @@
 // MIT/Apache2 License
 
-use crate::{util::Id, lazy_class::LazyClass, manager::data::ManagerData};
-use objc::{declare::ClassDecl, runtime::{Sel, Class, Object}};
+use crate::{lazy_class::LazyClass, manager::data::ManagerData, util::Id};
+use objc::{
+    declare::ClassDecl,
+    runtime::{Class, Object, Sel},
+};
 
 static ITAOS_VECTOR_SUBVIEW_CLASS: LazyClass = LazyClass::new();
 
