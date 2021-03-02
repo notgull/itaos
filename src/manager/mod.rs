@@ -10,7 +10,7 @@ pub(crate) mod data;
 pub(crate) mod eclass;
 mod thread;
 
-pub(crate) use thread::DirectiveThreadMessage;
+pub(crate) use thread::{get_gt_sender, DirectiveThreadMessage};
 
 /// Runs the thread that manages the Appkit thread.
 pub struct GuiThread {

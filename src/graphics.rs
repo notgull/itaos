@@ -1,12 +1,22 @@
 // MIT/Apache2 License
 
-use crate::task::{self, ServerTask};
+use crate::{
+    task::{self, ServerTask},
+    thread::get_gt_sender,
+};
 use clever_graphics::{context::Context, spawner::Spawner};
 use flume::Sender;
 use std::any::Any;
 
 /// A spawner used to spawn tasks on our Appkit thread.
 pub struct AppkitSpawner(Sender<Option<ServerTask>>);
+
+impl AppkitSpawner {
+    #[inline]
+    pub(crate) fn new() -> Self {
+        Self(get_gt_sender())
+    }
+}
 
 impl Spawner for AppkitSpawner {
     #[inline]
