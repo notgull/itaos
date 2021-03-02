@@ -35,4 +35,17 @@ impl GuiThread {
     pub(crate) fn into_inner(self) -> Sender<Option<ServerTask>> {
         self.sender
     }
+
+    /// Send a directive.
+    #[inline]
+    pub(crate) fn send_directive<T: Any + Send>(
+        &self,
+        directive: Directive,
+    ) -> crate::Result<Task<T>> {
+        let (t, s) = create_task::<T>(directive);
+        self.sender
+            .try_send(Some(s))
+            .map_err(|_| crate::Error::FailedToSendDirective)?;
+        t
+    }
 }
