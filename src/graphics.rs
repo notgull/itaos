@@ -26,10 +26,10 @@ impl Spawner for AppkitSpawner {
         &self,
         f: F,
     ) -> orphan_crippler::Receiver<T> {
-        let (t, s) = task::create_task::<T>(Directive::OffloadFunction(move |srvtask: ServerTask| {
+        let (t, s) = task::create_task::<T>(Directive::OffloadFunction(Box::new(move |srvtask: ServerTask| {
             let res = f();
             srvtask.send::<T>(res);
-        }));
+        })));
 
         if let Err(e) = self.0.try_send(Some(s)) {
             log::error!("Failed to offload task to server: {:?}", e);

@@ -162,8 +162,8 @@ fn initialize_window_class() -> &'static Class {
             let root_view: Id = msg_send![root_view, initWithFrame: content_rect];
             root_view
         };
-        unsafe { msg_send![this, setContentView: root_view] };
-        unsafe { msg_send![root_view, release] };
+        let _: () = unsafe { msg_send![this, setContentView: root_view] };
+        let _: () = unsafe { msg_send![root_view, release] };
 
         // we are done
         this

@@ -22,7 +22,7 @@ impl Directive {
         match self {
             Directive::OffloadFunction(func) => {
                 // we're just offloading some work onto our thread pool, run it
-                (func)();
+                (func)(task);
             }
             Directive::Show(win) => {
                 let win = unsafe { win.as_ptr() }.as_ptr();

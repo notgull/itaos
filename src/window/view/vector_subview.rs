@@ -38,7 +38,7 @@ fn create_itaos_vector_subview_class() -> &'static Class {
         let spawner = AppkitSpawner::new();
         let graphics = unsafe { CGContext::from_existing_context_ptr(context as *mut c_void as *mut _) };
 
-        objc_try!(graphics.save()).ok();
+        graphics.save();
 
         let tsgraphics = Graphics::new(graphics.clone(), AppkitSpawner::new());
 
@@ -55,7 +55,7 @@ fn create_itaos_vector_subview_class() -> &'static Class {
 
         process_event(&mdata, Event::Paint(Key::from_ptr_nn(win.cast()), tsgraphics));
 
-        objc_try!(graphics.restore()).ok();
+        graphics.restore();
     }
 
     subview_class.register()
