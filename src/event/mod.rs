@@ -37,26 +37,9 @@ pub enum Event {
         x: f64,
         y: f64,
     },
-    MouseEntered {
-        window: Window,
-        x: f64,
-        y: f64,
-    },
-    MouseExited {
-        window: Window,
-        x: f64,
-        y: f64,
-    },
-    KeyUp {
-        window: Window,
-        key: Key,
-        modifiers: Modifiers,
-    },
-    KeyDown {
-        window: Window,
-        key: Key,
-        modifiers: Modifiers,
-    },
+    MouseEntered { window: Window, x: f64, y: f64 },
+    MouseExited { window: Window, x: f64, y: f64 },
+    KeyUp { window: Window, key: Key },
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -64,15 +47,4 @@ pub enum MouseButton {
     Left,
     Middle,
     Right,
-}
-
-bitflags::bitflags! {
-    #[derive(Debug, Copy, Clone)]
-    pub struct Modifiers {
-        const SHIFT = 1 << 0;
-        const CTRL = 1 << 1;
-        const ALT = 1 << 2;
-        const CAPS_LOCK = 1 << 3;
-        const COMMAND = 1 << 4;
-    }
 }
