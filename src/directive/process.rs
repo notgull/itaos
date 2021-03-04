@@ -66,7 +66,7 @@ impl Directive {
                                    styleMask:style
                                    backing:backing
                                    defer:{ if defer { 1 } else { 0 } }
-                                   screen:screen)]
+                                   screen:screen]
                 });
 
                 task.send::<crate::Result<Key>>(match win {
