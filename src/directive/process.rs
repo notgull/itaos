@@ -20,7 +20,7 @@ impl Directive {
     #[inline]
     pub(crate) fn process(self, task: ServerTask, data: &Rc<ManagerData>) {
         match self {
-            Directive::Offload(func) => {
+            Directive::OffloadFunction(func) => {
                 // we're just offloading some work onto our thread pool, run it
                 (func)();
             }
@@ -76,7 +76,7 @@ impl Directive {
                     }
                     Ok(win) => {
                         // SAFETY: we know win is non-null
-                        Key::from_ptr_nn(unsafe { NonNull::new_unchecked(win) })
+                        Ok(Key::from_ptr_nn(unsafe { NonNull::new_unchecked(win.cast()) }))
                     }
                 });
             }

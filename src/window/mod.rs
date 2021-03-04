@@ -6,7 +6,7 @@ pub(crate) mod window;
 use crate::{directive::Directive, manager::GuiThread, task::Task, Key};
 use cocoa::appkit::{NSBackingStoreType, NSWindowStyleMask};
 
-pub(crate) use view::get_vector_view_class();
+pub(crate) use view::get_vector_view_class;
 pub(crate) use window::get_window_class;
 
 pub type Window = Key;
