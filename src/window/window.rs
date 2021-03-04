@@ -10,7 +10,7 @@ use crate::{
 };
 use cocoa::{
     appkit::{NSBackingStoreType, NSWindowStyleMask},
-    foundation::{NSInteger, NSUInteger, NSRect},
+    foundation::{NSInteger, NSRect, NSUInteger},
 };
 use objc::{
     declare::ClassDecl,
@@ -65,7 +65,10 @@ fn initialize_window_class() -> &'static Class {
     }
 
     unsafe {
-        itaos_window.add_method(sel!(mdata), mdata as extern "C" fn(&Object, Sel) -> *mut c_void);
+        itaos_window.add_method(
+            sel!(mdata),
+            mdata as extern "C" fn(&Object, Sel) -> *mut c_void,
+        );
     }
 
     // runs when the window should close
@@ -93,6 +96,21 @@ fn initialize_window_class() -> &'static Class {
             sel!(windowShouldClose:),
             window_should_close as extern "C" fn(&mut Object, Sel, Id) -> BOOL,
         );
+    }
+
+    // runs when we dealloc
+    extern "C" fn dealloc(this: &Object, _sel: Sel) {
+        // remove one reference from our mdata
+        unsafe {
+            ManuallyDrop::drop(&mut get_mdata(this));
+        }
+
+        // dealloc using our superclass
+        let _: () = unsafe { msg_send![super(this, this.class().superclass().unwrap()), dealloc] };
+    }
+
+    unsafe {
+        itaos_window.add_method(sel!(dealloc), dealloc as extern "C" fn(&Object, Sel));
     }
 
     // intercepts events and turns them into our type of events
@@ -155,15 +173,7 @@ fn initialize_window_class() -> &'static Class {
         itaos_window.add_method(
             sel!(initWithContentRect: contentRect: styleMask: backing: defer: screen:),
             init_with_content_rect
-                as extern "C" fn(
-                    &Object,
-                    Sel,
-                    NSRect,
-                    NSUInteger,
-                    NSUInteger,
-                    BOOL,
-                    Id,
-                ) -> Id,
+                as extern "C" fn(&Object, Sel, NSRect, NSUInteger, NSUInteger, BOOL, Id) -> Id,
         );
     }
 

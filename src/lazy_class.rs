@@ -21,8 +21,10 @@ impl Cache {
 
     #[inline]
     pub fn get_or_init<F: FnOnce() -> &'static Class>(&'static self, f: F) -> &'static Class {
+        const NULL: *mut Class = ptr::null_mut();
+
         match self.class.load(Ordering::Acquire) {
-            ptr::null_mut() => {
+            NULL => {
                 let p = f();
                 self.class.store(p as *const Class, Ordering::Release);
                 p

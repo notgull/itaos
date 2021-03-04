@@ -28,5 +28,5 @@ pub use task::Task;
 macro_rules! objc_try {
     ($expr: expr) => {{
         (clever_graphics::objc_try!($expr)).map_err(|e| $crate::Error::ObjcException(e))
-    }}
+    }};
 }

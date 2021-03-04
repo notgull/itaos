@@ -66,10 +66,10 @@ impl Directive {
                                    styleMask:style
                                    backing:backing
                                    defer:{ if defer { 1 } else { 0 } }
-                                   screen:screen.as_ptr()]
+                                   screen:screen)]
                 });
 
-                task.complete::<crate::Result<Key>>(match win {
+                task.send::<crate::Result<Key>>(match win {
                     Err(e) => Err(e),
                     Ok(ptr::null_mut()) => {
                         panic!("Unless an exception was thrown, win should not be null")

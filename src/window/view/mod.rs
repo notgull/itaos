@@ -1,7 +1,10 @@
 // MIT/Apache2 License
 
 use crate::{lazy_class::LazyClass, util::Id};
-use cocoa::foundation::{NSNotFound, NSRange, NSRect, NSTrackingAreaOptions};
+use cocoa::{
+    appkit::NSTrackingAreaOptions,
+    foundation::{NSNotFound, NSRange, NSRect},
+};
 use objc::{
     declare::ClassDecl,
     runtime::{Class, Object, Sel, YES},
@@ -13,7 +16,7 @@ mod vector;
 
 pub(crate) mod vector_subview;
 
-pub(crate) use gl::get_gl_view_class;
+//pub(crate) use gl::get_gl_view_class;
 pub(crate) use vector::get_vector_view_class;
 
 #[inline]
@@ -43,7 +46,7 @@ fn create_itaos_view_class() -> &'static Class {
                 initWithFrame: frame
             ]
         };
-/*        if !this_but_id.is_null() {
+        /*        if !this_but_id.is_null() {
             unsafe {
                 let _: () = msg_send![this_but_id, addTrackingArea: tracking_area];
                 this.set_ivar::<Id>(TRACKING_AREA, tracking_area);
@@ -59,5 +62,5 @@ fn create_itaos_view_class() -> &'static Class {
         );
     }
 
-    itaos_view.register();
+    itaos_view.register()
 }

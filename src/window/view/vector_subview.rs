@@ -15,6 +15,11 @@ use objc::{
 };
 use std::{ffi::c_void, mem::ManuallyDrop, ptr::NonNull, rc::Rc};
 
+#[inline]
+pub(crate) fn get_vector_subview_class() -> &'static Class {
+    ITAOS_VECTOR_SUBVIEW_CLASS.get_or_init(create_itaos_vector_subview_class)
+}
+
 static ITAOS_VECTOR_SUBVIEW_CLASS: LazyClass = LazyClass::new();
 
 #[inline]
@@ -22,14 +27,14 @@ fn create_itaos_vector_subview_class() -> &'static Class {
     let mut subview_class = ClassDecl::new("ItaosVectorSubview", class!(NSView)).unwrap();
 
     extern "C" fn draw_rect(this: &Object, _sel: Sel, rect: NSRect) {
-        let context: Id = unsafe {
+        let context: *const c_void = unsafe {
             let context: Id = msg_send![class!(NSGraphicsContext), currentContext];
             msg_send![context, CGContext]
         };
 
         // create the context pointer
         let spawner = AppkitSpawner::new();
-        let graphics = unsafe { Graphics::new(context.cast(), spawner) };
+        let graphics = unsafe { Graphics::from_raw(context.cast(), spawner) };
 
         graphics.save().ok();
 
@@ -40,7 +45,7 @@ fn create_itaos_vector_subview_class() -> &'static Class {
             None => return,
         };
 
-        let mdata: *const c_void = unsafe { msg_send![win, mdata] };
+        let mdata: *const c_void = unsafe { msg_send![win.as_ptr(), mdata] };
         let mdata: ManuallyDrop<Rc<ManagerData>> =
             ManuallyDrop::new(unsafe { Rc::from_raw(mdata.cast()) });
 

@@ -1,8 +1,9 @@
 // MIT/Apache2 License
 
 use crate::{
+    directive::Directive,
+    manager::get_gt_sender,
     task::{self, ServerTask},
-    thread::get_gt_sender,
 };
 use clever_graphics::{context::Context, spawner::Spawner};
 use flume::Sender;

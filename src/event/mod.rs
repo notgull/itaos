@@ -37,9 +37,20 @@ pub enum Event {
         x: f64,
         y: f64,
     },
-    MouseEntered { window: Window, x: f64, y: f64 },
-    MouseExited { window: Window, x: f64, y: f64 },
-    KeyUp { window: Window, key: Key },
+    MouseEntered {
+        window: Window,
+        x: f64,
+        y: f64,
+    },
+    MouseExited {
+        window: Window,
+        x: f64,
+        y: f64,
+    },
+    KeyUp {
+        window: Window,
+        key: Key,
+    },
 }
 
 #[derive(Debug, Copy, Clone)]

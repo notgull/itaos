@@ -1,7 +1,7 @@
 // MIT/Apache2 License
 
 use super::{Event, MouseButton};
-use crate::{Key, util::Id};
+use crate::{util::Id, Key};
 use cocoa::{appkit::NSEventType, foundation};
 use std::mem;
 
@@ -41,7 +41,7 @@ pub(crate) fn translate_nsevent(event: Id) -> Option<Event> {
 fn translate_button_event(event: Id, ty: NSEventType) -> Option<Event> {
     let button = mouse_button_for_event(event)?;
     let (window, x, y) = window_and_point_for_event(event);
-    let window = Key::from_ptr(window)?;
+    let window = Key::from_ptr(window.cast())?;
 
     match ty {
         NSEventType::NSLeftMouseDown
@@ -82,7 +82,7 @@ fn mouse_button_for_event(event: Id) -> Option<MouseButton> {
 fn translate_mouse_event(event: Id, ty: NSEventType) -> Option<Event> {
     let button = mouse_button_for_event(event)?;
     let (window, x, y) = window_and_point_for_event(event);
-    let window = Key::from_ptr(window)?;
+    let window = Key::from_ptr(window.cast())?;
 
     match ty {
         NSEventType::NSLeftMouseDragged
@@ -101,7 +101,7 @@ fn translate_mouse_event(event: Id, ty: NSEventType) -> Option<Event> {
 #[inline]
 fn translate_enter_event(event: Id, ty: NSEventType) -> Option<Event> {
     let (window, x, y) = window_and_point_for_event(event);
-    let window = Key::from_ptr(window)?;
+    let window = Key::from_ptr(window.cast())?;
 
     match ty {
         NSEventType::NSMouseEntered => Some(Event::MouseEntered { window, x, y }),
