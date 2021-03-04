@@ -6,7 +6,6 @@ use crate::{
     key::Key,
     lazy_class::LazyClass,
     manager::data::ManagerData,
-    manager::data::ManagerData,
     util::Id,
 };
 use cocoa::foundation::NSRect;
@@ -20,7 +19,7 @@ static ITAOS_VECTOR_SUBVIEW_CLASS: LazyClass = LazyClass::new();
 
 #[inline]
 fn create_itaos_vector_subview_class() -> &'static Class {
-    let mut subview_class = ClassDecl::new("ItaosVectorSubview", class!(NSView));
+    let mut subview_class = ClassDecl::new("ItaosVectorSubview", class!(NSView)).unwrap();
 
     extern "C" fn draw_rect(this: &Object, _sel: Sel, rect: NSRect) {
         let context: Id = unsafe {

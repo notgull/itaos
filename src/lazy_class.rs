@@ -6,7 +6,6 @@ use std::{
     sync::atomic::{AtomicPtr, Ordering},
 };
 
-#[doc(hidden)]
 pub(crate) struct LazyClass {
     // the internal class
     class: AtomicPtr<Class>,

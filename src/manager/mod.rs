@@ -47,6 +47,6 @@ impl GuiThread {
         self.sender
             .try_send(Some(s))
             .map_err(|_| crate::Error::FailedToSendDirective)?;
-        t
+        Ok(t)
     }
 }

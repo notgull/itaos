@@ -62,10 +62,10 @@ impl Directive {
                 };
                 let win: crate::Result<Id> = objc_try!(unsafe {
                     let win: Id = msg_send![get_window_class(), alloc];
-                    msg_send![win, initWithContentRect:content_rect,
-                                   styleMask:style,
-                                   backing:backing,
-                                   defer:{ if defer { 1 } else { 0 } },
+                    msg_send![win, initWithContentRect:content_rect
+                                   styleMask:style
+                                   backing:backing
+                                   defer:{ if defer { 1 } else { 0 } }
                                    screen:screen.as_ptr()]
                 });
 

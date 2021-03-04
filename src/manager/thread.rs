@@ -164,9 +164,9 @@ static GUI_THREAD: Lazy<Sender<Option<ServerTask>>> = Lazy::new(|| {
                             crate::event::process_event(&manager_data, ev);
                         }
                         // send the event on
-                        if let Err(e) = objc_try!(
+                        if let Err(e) = objc_try!({
                                             let _: () = unsafe { msg_send![*shared_app, sendEvent: event] }
-                                        ) {
+                                        }) {
                             log::error!("Failed to send event to receiver: {:?}", e);
                         }
                     }

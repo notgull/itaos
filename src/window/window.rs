@@ -10,7 +10,7 @@ use crate::{
 };
 use cocoa::{
     appkit::{NSBackingStoreType, NSWindowStyleMask},
-    foundation::NSRect,
+    foundation::{NSInteger, NSUInteger, NSRect},
 };
 use objc::{
     declare::ClassDecl,
@@ -117,8 +117,8 @@ fn initialize_window_class() -> &'static Class {
         this: &Object,
         _sel: Sel,
         content_rect: NSRect,
-        style_mask: NSWindowStyleMask,
-        backing: NSBackingStoreType,
+        style_mask: NSUInteger,
+        backing: NSUInteger,
         defer: BOOL,
         screen: Id,
     ) -> Id {
@@ -153,14 +153,14 @@ fn initialize_window_class() -> &'static Class {
 
     unsafe {
         itaos_window.add_method(
-            sel!(initWithContentRect: contentRect: styleMask: backing: defer: screen),
+            sel!(initWithContentRect: contentRect: styleMask: backing: defer: screen:),
             init_with_content_rect
                 as extern "C" fn(
                     &Object,
                     Sel,
                     NSRect,
-                    NSWindowStyleMask,
-                    NSBackingStoreType,
+                    NSUInteger,
+                    NSUInteger,
                     BOOL,
                     Id,
                 ) -> Id,

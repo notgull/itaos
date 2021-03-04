@@ -9,6 +9,7 @@ use flume::Sender;
 use std::any::Any;
 
 /// A spawner used to spawn tasks on our Appkit thread.
+#[derive(Debug)]
 pub struct AppkitSpawner(Sender<Option<ServerTask>>);
 
 impl AppkitSpawner {
