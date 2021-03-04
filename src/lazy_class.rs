@@ -11,7 +11,7 @@ pub(crate) struct LazyClass {
     class: AtomicPtr<Class>,
 }
 
-impl Cache {
+impl LazyClass {
     #[inline]
     pub const fn new() -> Self {
         Self {
