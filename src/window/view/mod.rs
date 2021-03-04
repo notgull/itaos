@@ -2,7 +2,6 @@
 
 use crate::{lazy_class::LazyClass, util::Id};
 use cocoa::{
-    appkit::NSTrackingAreaOptions,
     foundation::{NSNotFound, NSRange, NSRect},
 };
 use objc::{

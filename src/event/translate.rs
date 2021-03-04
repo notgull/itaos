@@ -28,7 +28,7 @@ pub(crate) fn translate_nsevent(event: Id) -> Option<Event> {
         | NSEventType::NSRightMouseDragged
         | NSEventType::NSOtherMouseDragged
         | NSEventType::NSMouseMoved => return translate_mouse_event(event, ty),
-        NSEventType::NSMouseEntered | MSEventType::NSMouseExited => {
+        NSEventType::NSMouseEntered | NSEventType::NSMouseExited => {
             return translate_enter_event(event, ty)
         }
         _ => (),

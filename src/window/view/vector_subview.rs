@@ -7,8 +7,10 @@ use crate::{
     lazy_class::LazyClass,
     manager::data::ManagerData,
     util::Id,
+    objc_try,
 };
 use cocoa::foundation::NSRect;
+use core_graphics::context::CGContext;
 use objc::{
     declare::ClassDecl,
     runtime::{Class, Object, Sel},
@@ -34,9 +36,11 @@ fn create_itaos_vector_subview_class() -> &'static Class {
 
         // create the context pointer
         let spawner = AppkitSpawner::new();
-        let graphics = unsafe { Graphics::from_raw(context.cast(), spawner) };
+        let graphics = unsafe { CGContext::from_existing_context_ptr(context as *mut c_void as *mut _) };
 
-        graphics.save().ok();
+        objc_try!(graphics.save()).ok();
+
+        let tsgraphics = Graphics::new(graphics.clone(), AppkitSpawner::new());
 
         // get the mdata so we can run the processor
         let win: Id = unsafe { msg_send![this, window] };
@@ -49,9 +53,9 @@ fn create_itaos_vector_subview_class() -> &'static Class {
         let mdata: ManuallyDrop<Rc<ManagerData>> =
             ManuallyDrop::new(unsafe { Rc::from_raw(mdata.cast()) });
 
-        process_event(&mdata, Event::Paint(Key::from_ptr_nn(win.cast()), graphics));
+        process_event(&mdata, Event::Paint(Key::from_ptr_nn(win.cast()), tsgraphics));
 
-        graphics.restore().ok();
+        objc_try!(graphics.restore()).ok();
     }
 
     subview_class.register()

@@ -7,10 +7,12 @@ edition = "2018"
 [target.'cfg(unix)'.dependencies]
 # objc crates for interfacing with the runtime
 objc = "0.2"
+objc_exception = "0.1"
 
 # crates that define elements of the OSX API
-clever-graphics = "0.1.0"
+clever-graphics = "0.1.1"
 cocoa = "0.24.0"
+core-graphics = "0.22"
 nix = "0.19.1"
 
 # utility crates

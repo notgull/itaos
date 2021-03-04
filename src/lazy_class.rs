@@ -26,7 +26,7 @@ impl LazyClass {
         match self.class.load(Ordering::Acquire) {
             NULL => {
                 let p = f();
-                self.class.store(p as *const Class, Ordering::Release);
+                self.class.store(p as *const Class as *mut Class, Ordering::Release);
                 p
             }
             p => unsafe { &*p },

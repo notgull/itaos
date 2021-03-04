@@ -26,7 +26,7 @@ impl Spawner for AppkitSpawner {
         &self,
         f: F,
     ) -> orphan_crippler::Receiver<T> {
-        let (t, s) = task::create_task::<T>(Directive::Offload(move |srvtask| {
+        let (t, s) = task::create_task::<T>(Directive::OffloadFunction(move |srvtask| {
             let res = f();
             srvtask.complete::<T>(res);
         }));

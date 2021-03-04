@@ -2,7 +2,7 @@
 
 use super::Directive;
 use crate::{
-    manager::data::ManagerData, objc_try, task::ServerTask, util::Id, window::get_window_class,
+    manager::data::ManagerData, objc_try, task::ServerTask, util::Id, window::get_window_class, Key,
 };
 use cocoa::foundation::{NSPoint, NSRect, NSSize};
 use objc::{
@@ -71,7 +71,7 @@ impl Directive {
 
                 task.send::<crate::Result<Key>>(match win {
                     Err(e) => Err(e),
-                    Ok(ptr::null_mut()) => {
+                    Ok(nil) => {
                         panic!("Unless an exception was thrown, win should not be null")
                     }
                     Ok(win) => {
