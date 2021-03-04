@@ -13,7 +13,6 @@ pub(crate) struct LazyClass {
 }
 
 impl Cache {
-    #[doc(hidden)]
     #[inline]
     pub const fn new() -> Self {
         Self {
@@ -21,7 +20,6 @@ impl Cache {
         }
     }
 
-    #[doc(hidden)]
     #[inline]
     pub fn get_or_init<F: FnOnce() -> &'static Class>(&'static self, f: F) -> &'static Class {
         match self.class.load(Ordering::Acquire) {

@@ -61,11 +61,11 @@ fn initialize_window_class() -> &'static Class {
 
     // helper function to get the mdata
     extern "C" fn mdata(this: &Object, _sel: Sel) -> *mut c_void {
-        Rc::as_ptr(&get_mdata(this)).cast()
+        Rc::as_ptr(&get_mdata(this)) as *const c_void as *mut c_void
     }
 
     unsafe {
-        itaos_window.add_method(sel!(mdata), mdata as extern "C" fn(&Object, Sel));
+        itaos_window.add_method(sel!(mdata), mdata as extern "C" fn(&Object, Sel) -> *mut c_void);
     }
 
     // runs when the window should close
@@ -96,8 +96,8 @@ fn initialize_window_class() -> &'static Class {
     }
 
     // intercepts events and turns them into our type of events
-    extern "C" fn send_event(obj: &Object, _sel: Sel, event: Id) {
-        unsafe {
+    extern "C" fn send_event(this: &Object, _sel: Sel, event: Id) {
+        let _: () = unsafe {
             msg_send![
                 super(this, this.class().superclass().unwrap()),
                 sendEvent: event
@@ -163,7 +163,7 @@ fn initialize_window_class() -> &'static Class {
                     NSBackingStoreType,
                     BOOL,
                     Id,
-                ) -> BOOL,
+                ) -> Id,
         );
     }
 

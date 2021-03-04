@@ -2,9 +2,10 @@
 
 use crate::{
     directive::Directive,
-    task::{create_task, ServerTask},
+    task::{create_task, ServerTask, Task},
 };
 use flume::{Receiver, Sender};
+use std::any::Any;
 
 pub(crate) mod data;
 pub(crate) mod eclass;

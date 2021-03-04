@@ -43,12 +43,12 @@ fn create_itaos_view_class() -> &'static Class {
                 initWithFrame: frame
             ]
         };
-        if !this_but_id.is_null() {
+/*        if !this_but_id.is_null() {
             unsafe {
                 let _: () = msg_send![this_but_id, addTrackingArea: tracking_area];
                 this.set_ivar::<Id>(TRACKING_AREA, tracking_area);
             }
-        }
+        }*/
         this_but_id
     }
 
