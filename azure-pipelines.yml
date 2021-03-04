@@ -1,0 +1,50 @@
+trigger:
+  branches:
+    include: ['*']
+
+jobs:
+ - job:
+   displayName: "Check Formatting"
+   pool:
+     vmImage: ubuntu-latest
+   steps: 
+    - template: ci/install-rust.yml
+      parameters:
+        toolchain: stable
+    - script: rustup component add rustfmt
+      displayName: "Add Rustfmt"
+    - bash: rustfmt --edition 2018 --check src/lib.rs
+      displayName: "Check for properly formatted code"
+ - job:
+   displayName: "Clippy Warnings"
+   pool:
+    vmImage: macos-latest
+   steps:
+    - template: ci/install-rust.yml
+      parameters:
+        toolchain: stable
+    - script: rustup component add clippy
+      displayName: "Add Clippy"
+    - bash: cargo clippy -- -Dwarnings
+      displayName: "Clippy"
+ - job:
+   displayName: "Build & Test"
+   strategy:
+     matrix:
+       OSXStable:
+         toolchain: stable
+         vmImage: macOS-latest
+       OSXBeta:
+         toolchain: beta
+         vmImage: macOS-latest
+       OSXNightly:
+         toolchain: nightly
+         vmImage: macOS-latest
+   pool:
+     vmImage: $(vmImage)
+   steps:
+    - template: ci/install-rust.yml
+      parameters:
+        toolchain: $(toolchain)
+    - bash: cargo test
+      displayName: "Test"
