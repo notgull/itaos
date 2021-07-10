@@ -1,32 +1,17 @@
 [package]
 name = "itaos"
 version = "0.1.0"
-authors = ["not_a_seagull <jtnunley01@gmail.com>"]
 edition = "2018"
 
-[target.'cfg(unix)'.dependencies]
-# objc crates for interfacing with the runtime
-objc = "0.2"
-objc_exception = "0.1"
-
-# crates that define elements of the OSX API
-clever-graphics = "0.1.1"
-cocoa = "0.24.0"
-core-graphics = "0.22"
-nix = "0.19.1"
-
-# utility crates
-bitflags = "1.2.1"
-flume = { version = "0.10", default-features = false }
-gluten-keyboard = { version = "0.1" }
-log = "0.4"
-once_cell = "1.5.2"
-orphan-crippler = "0.1.1"
-tinyvec = { version = "1.1", features = ["alloc"] }
-
-[features]
-parking_lot = ["clever-graphics/parking_lot", "once_cell/parking_lot", "orphan-crippler/parking_lot"]
+[target.'cfg(target_os = "macos")'.dependencies]
+breadthread = { path = "../breadthread" }
+cocoa = "0.24"
+core-foundation = "0.9"
+objc = "0.2.3"
+orphan-crippler = "0.1"
 
 [package.metadata.docs.rs]
 default-target = "x86_64-apple-darwin"
-targets = ["aarch64-apple-darwin", "x86_64-apple-darwin"]
+
+[features]
+parking_lot = ["breadthread/pl", "once_cell/parking_lot", "orphan-crippler/parking_lot"]
