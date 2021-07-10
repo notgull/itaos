@@ -7,7 +7,7 @@ edition = "2018"
 breadthread = { path = "../breadthread" }
 cocoa = "0.24"
 core-foundation = "0.9"
-objc = "0.2.3"
+objc = { version = "0.2", features = ["exception"] }
 orphan-crippler = "0.1"
 
 [package.metadata.docs.rs]

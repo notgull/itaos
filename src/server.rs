@@ -1,11 +1,11 @@
 // MIT/Apache2 License
 
-use crate::{directive_event_class, Directive};
+use crate::{directive_event_class, msg_send, Directive};
 use breadthread::{
     AddOrRemovePtr, BreadThread, Completer, Controller, LoopCycle, PinnedThreadHandle, ThreadHandle,
 };
 use objc::{
-    prelude::*,
+    cls,
     runtime::{Object, YES},
 };
 use once_cell::unsync::{Lazy, OnceCell};
@@ -188,15 +188,22 @@ unsafe impl Send for DirectiveAdaptor {}
 impl breadthread::DirectiveAdaptor<Directive> for DirectiveAdaptor {
     #[inline]
     fn send(&mut self, directive: Sender<Directive>) {
-        // create an instance of ItaosDirectiveEvent
-        let de: *mut Object = unsafe { msg_send![directive_event_class(), alloc] };
+        #[inline]
+        fn wrapper(da: &mut DirectiveAdaptor, directive: Sender<Directive>) -> crate::Result {
+            // create an instance of ItaosDirectiveEvent
+            let de: *mut Object = unsafe { msg_send![directive_event_class(), alloc] };
 
-        let directive: *mut c_void = Box::into_raw(Box::new(directive)).cast();
+            let directive: *mut c_void = Box::into_raw(Box::new(directive)).cast();
 
-        let de: *mut Object = unsafe { msg_send![de, initWithDirective: directive] };
+            let de: *mut Object = unsafe { msg_send![de, initWithDirective: directive] };
 
-        // put it into the event queue, preferably close to the front
-        let _: () = unsafe { msg_send![self.app, postEvent: de atStart: YES] };
+            // put it into the event queue, preferably close to the front
+            let _: () = unsafe { msg_send![da.app, postEvent: de atStart: YES] };
+
+            Ok(())
+        }
+
+        wrapper(self, directive).expect("Unable to send directive")
     }
 }
 
